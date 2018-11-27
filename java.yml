@@ -1,0 +1,9 @@
+---
+- hosts: [slaves]
+  tasks:
+   - name: Set-up java
+     yum:
+       name: java
+       state: latest
+     become: true
+...

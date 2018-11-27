@@ -1,0 +1,62 @@
+---
+- hosts: [slaves]
+  tasks:
+   - name: Set-up wget
+     yum:
+       name: wget
+       state: latest
+     become: true
+
+   - name: Set-up java
+     yum:
+       name: java
+       state: latest
+     become: true
+
+   - name: Download foo.conf
+     get_url:
+       url: https://download.sonatype.com/nexus/3/latest-unix.tar.gz
+       dest: /opt
+     become: true
+   - name: Extract foo.tgz into /var/lib/foo
+     unarchive:
+       src: /opt/nexus-3.14.0-04-unix.tar.gz
+       dest: /opt/
+       remote_src: yes
+     become: true
+   - name:  create symbolic link
+     file:
+       src: "/opt/nexus-3.14.0-04/"
+       dest: "/opt/nexus"
+       state: link
+     become: true
+   - name: add user
+     user:
+       name: nexus
+       comment: nexus
+       #uid: 1040
+     become: true
+   - name: permissions
+     shell: 'sudo chown -R nexus:nexus /opt/nexus'
+     become: true
+   - name: nexusrc line insert
+     lineinfile:
+       path: /opt/nexus/bin/nexus.rc
+       line: 'run_as_user="nexus"'
+     become: true
+
+   - name:  create symbolic link
+     file:
+       src: "/opt/nexus/bin/nexus"
+       dest: "/etc/init.d/nexus"
+       state: link
+     become: true
+
+   - name: enable nexus
+     shell: 'systemctl enable nexus'
+     become: true
+
+   - name: start nexus
+     shell: 'systemctl start nexus'
+     become: true
+...
